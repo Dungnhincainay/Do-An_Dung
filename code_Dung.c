@@ -42,22 +42,22 @@ if(FLAG_PID_NHIET_DO==1){///VAO CHE DO PID NHIET DO
 	FLAG_PID_NHIET_DO=0;  
 }
 //P1.2 Mã nguồn xử lý chế độ Manual điều khiển thiết bị bằng tay
+
 if(FLAG_MANUAL==1){///VAO CHE DO MANUAL
 	analogWrite(LED,DIM_Led); //bat Led
 	analogWrite(12,PWM_FAN);  //Bat quat
   if (bt2 == 1){
     digitalWrite(BOM,HIGH);//bat bom
 	  Serial.println("BAT BOM");
-  }
-  else {
+  }else {
 	  digitalWrite(BOM,LOW);//tat bom
 	  Serial.println("TAT BOM");
   }
-    if (BT_AC == 1){
+  
+  if (BT_AC == 1){
       Serial.println("BAT THANH NHIET");
       digitalWrite(AC,HIGH);
-    }
-    else {
+   }else {
       Serial.println("TAT THANH NHIET");
 	    digitalWrite(AC,LOW);
     }
@@ -95,23 +95,24 @@ if(FLAG_PID==1){////VAO CHE DO TU DONG CHO QUAT
 }//Ket thuc ham chay tu dong cho quat
  
 //P1.4 Mã nguồn xử lý chế độ đo độ sáng
+// void Luminance_value(){
+//   unsigned int data[2];
+//   Wire.beginTransmission(Addr);
+//   Wire.write(0x03);
+//   Wire.endTransmission();
+//   Wire.requestFrom(Addr, 2);
+//   if (Wire.available() == 2){
+//     data[0] = Wire.read();
+//     data[1] = Wire.read();
+//   }
+//   // Convert the data to lux
+//   int exponent = (data[0] & 0xF0) >> 4;
+//   int mantissa = ((data[0] & 0x0F) << 4) | (data[1] & 0x0F);
+//   luminance = pow(2, exponent)  mantissa  0.045;
+//   Blynk.virtualWrite(V11, luminance);
+//   }
 
-void Luminance_value(){
-  unsigned int data[2];
-  Wire.beginTransmission(Addr);
-  Wire.write(0x03);
-  Wire.endTransmission();
-  Wire.requestFrom(Addr, 2);
-  if (Wire.available() == 2){
-    data[0] = Wire.read();
-    data[1] = Wire.read();
-  }
-  // Convert the data to lux
-  int exponent = (data[0] & 0xF0) >> 4;
-  int mantissa = ((data[0] & 0x0F) << 4) | (data[1] & 0x0F);
-  luminance = pow(2, exponent)  mantissa  0.045;
-  Blynk.virtualWrite(V11, luminance);
-  }
+
 //___P1.5 Mã nguồn xử lý chế độ đo nhiệt độ, độ ẩm không khí, độ ẩm đất
 void sendSensor(){//doc nhiet do do am khong khi
   float h = dht.readHumidity();         //doc gia tri do am tu  DHT21
