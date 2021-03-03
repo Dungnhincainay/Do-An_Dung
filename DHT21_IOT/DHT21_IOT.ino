@@ -5,11 +5,10 @@
 #include <DHT.h>
 
 
-#define BLYNK_PRINT Serial
 
-// You should get Auth Token in the Blynk App.
-// Go to the Project Settings (nut icon).
 char auth[] = "YourAuthToken";
+BlynkTimer timer;
+#define BLYNK_PRINT Serial
 
 #define DHTPIN 2 
 #define DHTTYPE DHT11     // DHT 11
@@ -17,7 +16,6 @@ char auth[] = "YourAuthToken";
 //#define DHTTYPE DHT21   // DHT 21, AM2301
 
 DHT dht(DHTPIN, DHTTYPE);
-BlynkTimer timer;
 
 void sendSensor()
 {
@@ -38,8 +36,8 @@ void setup()
 
   Serial.begin(9600);
   Blynk.begin(auth);
-
   dht.begin();
+
 
   // Setup a function to be called every second
   timer.setInterval(1000L, sendSensor);

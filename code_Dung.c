@@ -2,13 +2,14 @@
 // Phụ lục 1: Mã nguồn xử lý của chương trình điều khiển 
 
 //P1.1: Mã nguồn xử lý tính toán delay trước khi mở Triac
-if(FLAG_PID_NHIET_DO==1){///VAO CHE DO PID NHIET DO
+if(FLAG_PID_NHIET_DO==1)
+{  ///VAO CHE DO PID NHIET DO
   A = nhietdodat - sensorTemp;
   Serial.println("Day la che do PID");
   Serial.println(led_Kp);
   Serial.println(led_Ki);
   Serial.println(led_Kd);
-    if (A < 0) {
+  if (A < 0) {
     timer_1 = 0.9;
     }
     else{
@@ -23,19 +24,18 @@ if(FLAG_PID_NHIET_DO==1){///VAO CHE DO PID NHIET DO
   
       if (led_Output>255){
         led_Output = 255;
-      }
-      else{
+      }else{
           if (led_Output<1){
-            led_Output = 1;
+              led_Output = 1;
           }
-      }   
+        }   
       timer_1 = 1/led_Output;
       if (timer_1<0){
-      timer_1 = 0;
+        timer_1 = 0;
       }
       else{
         if (timer_1>0.9){
-        timer_1 = 0.9;
+          timer_1 = 0.9;
         }
       }
     }	  
@@ -114,8 +114,9 @@ if(FLAG_PID==1){////VAO CHE DO TU DONG CHO QUAT
 
 
 //___P1.5 Mã nguồn xử lý chế độ đo nhiệt độ, độ ẩm không khí, độ ẩm đất
-void sendSensor(){//doc nhiet do do am khong khi
-  float h = dht.readHumidity();         //doc gia tri do am tu  DHT21
+void sendSensor()
+{                      //doc nhiet do do am khong khi
+   float h = dht.readHumidity();         //doc gia tri do am tu  DHT21
   sensorTemp = dht.readTemperature();   // Doc gia tri nhiet do tu DHT21
   Blynk.virtualWrite(V4, sensorTemp);   // Hien thi gia tri nhiet do len ung dung Blynk
   Serial.println("Nhiet do la  ");
@@ -124,10 +125,11 @@ void sendSensor(){//doc nhiet do do am khong khi
 	Blynk.virtualWrite(V15, h);           // Hien thi gia tri nhiet do len ung dung Blynk
   Serial.println("Nhiet do la  ");
   Serial.println(h);
-    if (isnan(h) || isnan(sensorTemp)) {
+
+  if (isnan(h) || isnan(sensorTemp)) {
       Serial.println("Loi khong co ket noi den DHT21!");
     }
-    if(sensorTemp>40){
+  if(sensorTemp>40){
       Blynk.notify("Hey,HUY! Nhiet do qua nguong 40 do");
 	  }
   Luminance_value();
@@ -138,26 +140,10 @@ void sendSensor(){//doc nhiet do do am khong khi
 //___P1.6 Mã nguồn xử lý điều khiển Triac
 void ICACHE_RAM_ATTR TriacControl(){ //them ICACHE_RAM_ATTR
   Serial.println("DA VAO CHUONG TRINH NGAT");
-   if(FLAG_MODE==1){
+  if(FLAG_MODE==1){
     delayMicroseconds(timer_1 * 10000);
     digitalWrite(AC, HIGH);
     delayMicroseconds(100);
    digitalWrite(AC, LOW);
    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

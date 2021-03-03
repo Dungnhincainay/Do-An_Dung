@@ -1,13 +1,11 @@
 #define BLYNK_PRINT Serial
 #include <ESP8266WiFi.h>
-#include <BlynkSimpleEsp8266.h>
-          
+#include <BlynkSimpleEsp8266.h>    
 //#include <SimpleTimer.h>
  
 SimpleTimer timer;
 //char auth[] = "C39HJavn-IoVsrHbYA7ea3IqlKhGauFL";
 char auth[] = "8TytNxie25BVKYolzRm_yLjF1vAGbrCA";
-
 char ssid[] = "Wifi Cua Tuan";
 char pass[] = "";
 
@@ -21,8 +19,7 @@ int flag=0;
  * V8 Ki
  * V9 Kd
  */
- int ledState = LOW;
-
+int ledState = LOW;
 unsigned long Ago = 0;
 unsigned long Now = 0;
 const long Set_time = 300;
@@ -55,7 +52,7 @@ void sendUptime()
     }                             // Nhấp nháy led
     digitalWrite(LED_BUILTIN, ledState);       // Đảo trạng thái led
   }
-  Serial.println("\nKet qua do duoc:\n");       // Hiển thị trên monitor
+  Serial.println("\nKet qua do duoc:");       // Hiển thị trên monitor
   Serial.print("Do Am = ");                     // Hiển thị trên monitor
   Serial.print(h);                              // Hiển thị trên monitor
   Serial.print("%  ");                          // Hiển thị trên monitor
@@ -70,8 +67,7 @@ void sendUptime()
     flag=1;
   }else if(t<70){
       flag=0;
-    }
-  
+    }  
 }
 
 void loop()
