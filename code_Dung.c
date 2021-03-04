@@ -1,4 +1,37 @@
 
+float humidity_sensor=0;             // V4 - Do am khong khi
+float temp_sensor=0;                // V5 - Nhiet do khong khi
+float hum_ADC,ADC_VAL,temp_Set;    // V6 - Do am Dat 
+
+
+#define QUAT D1         //GPIO5
+#define AC D2           //GPIO4 - thanh nhiet
+float humidity_sensor=0;             // V4 - Do am khong khi
+float temp_sensor=0;                // V5 - Nhiet do khong khi
+float hum_ADC,ADC_VAL,temp_Set,sai_so;    // V6 - Do am Dat 
+
+int flag=0;
+
+ // V1 V2 : Chọn chế độ
+ float value1;
+ float Kp =0;      //Kp
+ float Ki =0;      //Ki
+ float Kd =0;      //Kd
+
+int FLAG_PID,FLAG_MANUAL,FLAG_PID_NHIET_DO,BT_AC
+int ledState = LOW;
+unsigned long Ago = 0;
+unsigned long Now = 0;
+const long Set_time = 300;
+
+int flag=0;
+
+ // V1 V2 : Chọn chế độ
+ float value1;
+ float Kp =0;      //Kp
+ float Ki =0;      //Ki
+ float Kd =0;      //Kd
+
 // Phụ lục 1: Mã nguồn xử lý của chương trình điều khiển 
 
 //P1.1: Mã nguồn xử lý tính toán delay trước khi mở Triac
@@ -116,8 +149,8 @@ if(FLAG_PID==1){////VAO CHE DO TU DONG CHO QUAT
 //___P1.5 Mã nguồn xử lý chế độ đo nhiệt độ, độ ẩm không khí, độ ẩm đất
 void sendSensor()
 {                      //doc nhiet do do am khong khi
-   float h = dht.readHumidity();         //doc gia tri do am tu  DHT21
-  sensorTemp = dht.readTemperature();   // Doc gia tri nhiet do tu DHT21
+  float h = dht.readHumidity();         //doc gia tri do am tu  DHT21
+  float sensorTemp = dht.readTemperature();   // Doc gia tri nhiet do tu DHT21
   Blynk.virtualWrite(V4, sensorTemp);   // Hien thi gia tri nhiet do len ung dung Blynk
   Serial.println("Nhiet do la  ");
   Serial.print(sensorTemp);
@@ -130,7 +163,7 @@ void sendSensor()
       Serial.println("Loi khong co ket noi den DHT21!");
     }
   if(sensorTemp>40){
-      Blynk.notify("Hey,HUY! Nhiet do qua nguong 40 do");
+      Blynk.notify(" Nhiet do qua nguong 40 do");
 	  }
   Luminance_value();
   ADC_VAL = analogRead(A0);           // Doc gia tri do am dat
@@ -144,6 +177,6 @@ void ICACHE_RAM_ATTR TriacControl(){ //them ICACHE_RAM_ATTR
     delayMicroseconds(timer_1 * 10000);
     digitalWrite(AC, HIGH);
     delayMicroseconds(100);
-   digitalWrite(AC, LOW);
+    digitalWrite(AC, LOW);
    }
 }
