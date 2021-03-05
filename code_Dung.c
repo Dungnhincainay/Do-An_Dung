@@ -146,8 +146,8 @@ if(FLAG_PID==1){////VAO CHE DO TU DONG CHO QUAT
 //   }
 
 
-//___P1.5 Mã nguồn xử lý chế độ đo nhiệt độ, độ ẩm không khí, độ ẩm đất
-void sendSensor()
+//___P1.5 Mã nguồn xử lý chế độ đo nhiệt độ, độ ẩm không khí, độ ẩm đất _ ok
+void sendSensor()     
 {                      //doc nhiet do do am khong khi
   float h = dht.readHumidity();         //doc gia tri do am tu  DHT21
   float sensorTemp = dht.readTemperature();   // Doc gia tri nhiet do tu DHT21
@@ -170,13 +170,13 @@ void sendSensor()
   doamdat =((ADC_VAL/1024)/0.767442)*100;
   Blynk.virtualWrite(V16, doamdat);   // Hien thi gia tri do am dat len Blynk
 }
-//___P1.6 Mã nguồn xử lý điều khiển Triac
-void ICACHE_RAM_ATTR TriacControl(){ //them ICACHE_RAM_ATTR
-  Serial.println("DA VAO CHUONG TRINH NGAT");
-  if(FLAG_MODE==1){
-    delayMicroseconds(timer_1 * 10000);
-    digitalWrite(AC, HIGH);
-    delayMicroseconds(100);
-    digitalWrite(AC, LOW);
+//___P1.6 Mã nguồn xử lý điều khiển Triac___0k
+void ICACHE_RAM_ATTR TriacControl(){ //them ICACHE_RAM_ATTR 
+  Serial.println("DA VAO CHUONG TRINH NGAT");         
+  if(FLAG_MODE==1){         
+    delayMicroseconds(timer_1 * 10000);         
+    digitalWrite(AC, HIGH);         
+    delayMicroseconds(100);         
+    digitalWrite(AC, LOW);          
    }
 }
