@@ -1,7 +1,9 @@
+
 /*
 Code viet cho Esp8266 NodeMCU V3
 https://bitly.com.vn/b6vwo7
 GPIO 4, 5, 12, 13, 14, 16 có thể sử dụng bình thường.
+    D2 D1  D6  D7 D5  D0
 
 
 
@@ -16,8 +18,9 @@ Cổng: 9443 trên app và 8080 tren Esp
 #define BLYNK_PRINT Serial
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>    
-#include <SimpleTimer.h>
- 
+//#include <SimpleTimer.h>      // xoá
+#include <DHT.h>
+
 SimpleTimer timer;
 //char auth[] = "C39HJavn-IoVsrHbYA7ea3IqlKhGauFL";
 char auth[] = "8TytNxie25BVKYolzRm_yLjF1vAGbrCA";     // Cai dat mang
@@ -25,21 +28,28 @@ char ssid[] = "Wifi Cua Tuan";                        // Cai dat mang
 char pass[] = "";                                     // Cai dat mang
 
 
-#define QUAT D1         //GPIO5
-#define AC D2           //GPIO4 - thanh nhiet
-float humidity_sensor=0;             // V4 - Do am khong khi
-float temp_sensor=0;                // V5 - Nhiet do khong khi
-float hum_ADC,ADC_VAL,temp_Set,sai_so;    // V6 - Do am Dat 
+#define QUAT 5                        //GPIO5
+#define AC 4                         //GPIO4 - thanh nhiet
+#define BOM 12
+#define DHTPIN 13                    // chân D2 của arduino
+//#define DHTTYPE DHT22 // DHT 22 (AM2302), AM2321
+#define DHTTYPE DHT21 // DHT 21 (AM2301)
+
+DHT dht(DHTPIN, DHTTYPE);
+float humidity_sensor=0;             // V5 - Do am khong khi
+float temp_sensor=0;                // V6 - Nhiet do khong khi
+float h,t,hum_ADC,ADC_VAL,temp_Set,sai_so,timer_1;    // V4 - Do am Dat 
 
 int flag=0;
 
- // V1 V2 : Chọn chế độ
- float value1;
- float Kp =0;      //Kp
- float Ki =0;      //Ki
- float Kd =0;      //Kd
 
-int FLAG_PID,FLAG_MANUAL,FLAG_PID_NHIET_DO,BT_AC
+ float value1;
+ float Kp =1;      //Kp
+ float Ki =1;      //Ki
+ float Kd =1;      //Kd
+
+int FLAG_MODE,FLAG_PID,FLAG_MANUAL,FLAG_PID_NHIET_DO,BT_AC;
+int nhietdodat,Toc_do_quat,Bat_bom,Bat_Thanh_Nhiet;
 int ledState = LOW;
 unsigned long Ago = 0;
 unsigned long Now = 0;
@@ -49,7 +59,7 @@ const long Set_time = 300;
 BLYNK_CONNECTED() {
     Blynk.syncAll();
 }
- BLYNK_WRITE(V1){
+ BLYNK_WRITE(V1){ // Chọn chế độ 1- PID, 2- Manual
    value1 = param.asFloat(); // Get value as integer
  }
  BLYNK_WRITE(V7){   
@@ -60,6 +70,15 @@ BLYNK_CONNECTED() {
  }
  BLYNK_WRITE(V9){   
    Kd = param.asFloat(); // Get value as integer
+ }
+ BLYNK_WRITE(V10){   
+   Toc_do_quat = param.asInt(); // Get value as integer
+ }
+ BLYNK_WRITE(V11){   
+   Bat_bom = param.asInt(); // Get value as integer
+ }
+ BLYNK_WRITE(V12){   
+   Bat_Thanh_Nhiet = param.asInt(); // Get value as integer
  }
 
 void setup()
@@ -93,12 +112,12 @@ void sendUptime()
     digitalWrite(LED_BUILTIN, ledState);       // Đảo trạng thái led
   }
  
- 
   humidity_sensor = dht.readHumidity();         //doc gia tri do am tu  DHT21
-  temp_sensor = dht.readTemperature();   // Doc gia tri nhiet do tu DHT21
+  temp_sensor = dht.readTemperature();          // Doc gia tri nhiet do tu DHT21
   if (isnan(humidity_sensor) || isnan(temp_sensor)) {
       Serial.println("Loi khong co ket noi den DHT21!");
     }
+
 
   Serial.println("\nKet qua do duoc:");       // Hiển thị trên monitor
   Serial.print("Do Am = ");                     // Hiển thị trên monitor
@@ -121,49 +140,64 @@ void sendUptime()
   Blynk.virtualWrite(V6, hum_ADC);   // Hien thi gia tri do am dat len Blynk
 }
 
+
+// Mã nguồn xử lý điều khiển Triac
+void ICACHE_RAM_ATTR TriacControl(){ //them ICACHE_RAM_ATTR
+  Serial.println("DA VAO CHUONG TRINH NGAT");
+  if(FLAG_MODE==1){
+    delayMicroseconds(timer_1 * 10000);
+    digitalWrite(AC, HIGH);
+    delayMicroseconds(100);
+    digitalWrite(AC, LOW);
+   }
+}
+
 void loop()
 {
   Blynk.run();
   timer.run();
-  //P1.2 Mã nguồn xử lý chế độ Manual điều khiển thiết bị bằng tay
 
-  if(FLAG_MANUAL==1){///VAO CHE DO MANUAL
-	  analogWrite(LED,DIM_Led); //bat Led
-	  analogWrite(12,PWM_FAN);  //Bat quat
-    if (bt2 == 1){
-      digitalWrite(BOM,HIGH);//bat bom
-	    Serial.println("BAT BOM");
+
+
+  // Mã nguồn xử lý chế độ Manual điều khiển thiết bị bằng tay
+  if(FLAG_MANUAL==1){   //VAO CHE DO MANUAL
+
+	  analogWrite(QUAT,Toc_do_quat);  // Đieu khien toc do quat
+    if (Bat_bom == 1){
+      digitalWrite(BOM,HIGH);       // bat bom
+	    Serial.println("BAT BOM");    // Bat Bom
     }else {
-	    digitalWrite(BOM,LOW);//tat bom
-	    Serial.println("TAT BOM");
+	    digitalWrite(BOM,LOW);        // tat bom
+	    Serial.println("TAT BOM");    // tat bom
     }
   
-    if (BT_AC == 1){
-      Serial.println("BAT THANH NHIET");
-      digitalWrite(AC,HIGH);
+    if (Bat_Thanh_Nhiet == 1){
+      Serial.println("BAT THANH NHIET");    // Bat thanh nhiet
+      digitalWrite(AC,HIGH);                // Bat thanh nhiet
     }else {
-      Serial.println("TAT THANH NHIET");
-	    digitalWrite(AC,LOW);
+      Serial.println("TAT THANH NHIET");    // Tat thanh nhiet
+	    digitalWrite(AC,LOW);                 // Tat thanh nhiet
     }
 	  FLAG_MANUAL=0;  
   }
 
   // Mã nguồn xử lý chế độ điều khiển cho Quạt
   if(FLAG_PID==1){  ////VAO CHE DO TU DONG CHO QUAT
+
     Serial.println("Bat dau CHAY TU DONG CHO QUAT");
     Serial.println(nhietdodat);
     sai_so = temp_sensor - temp_Set;
     if (sai_so < 0) {
-       analogWrite(QUAT, 0);
+       analogWrite(QUAT, 0);    // Tat quat
        Serial.println("analogWrite(QUAT, 0)");
     }
     else 
       if (sai_so >= 5){
-        analogWrite(QUAT, 1024);
+        analogWrite(QUAT, 1024);// Quat chay het cong suat
         Serial.println("analogWrite(QUAT, 1024)");
       }
       else 
-        if (sai_so >= 3 && E < 5){
+        if (sai_so >= 3 && sai_so < 5){
           analogWrite(QUAT, 900);
           Serial.println("analogWrite(QUAT, 900)");
         }
@@ -178,15 +212,4 @@ void loop()
           }
     FLAG_PID=0;
   }//Ket thuc ham chay tu dong cho quat
-} // void loop
-
-//___P1.6 Mã nguồn xử lý điều khiển Triac
-void ICACHE_RAM_ATTR TriacControl(){ //them ICACHE_RAM_ATTR
-  Serial.println("DA VAO CHUONG TRINH NGAT");
-  if(FLAG_MODE==1){
-    delayMicroseconds(timer_1 * 10000);
-    digitalWrite(AC, HIGH);
-    delayMicroseconds(100);
-   digitalWrite(AC, LOW);
-   }
-}
+} // ket thuc void loop
