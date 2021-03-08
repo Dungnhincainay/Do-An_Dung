@@ -31,7 +31,7 @@ int flag=0;
  float Kp =0;      //Kp
  float Ki =0;      //Ki
  float Kd =0;      //Kd
-
+F
 // Phụ lục 1: Mã nguồn xử lý của chương trình điều khiển 
 
 //P1.1: Mã nguồn xử lý tính toán delay trước khi mở Triac

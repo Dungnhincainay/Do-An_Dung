@@ -17,6 +17,11 @@ BlynkTimer timer;
 
 DHT dht(DHTPIN, DHTTYPE);
 
+
+// Chương trình ngắt
+
+// Đọc giá trị từ BLYNK
+
 void sendSensor()
 {
   float h = dht.readHumidity(); 
@@ -47,4 +52,7 @@ void loop()
 {
   Blynk.run();
   timer.run();
+
+  // các điều kiện
+
 }
