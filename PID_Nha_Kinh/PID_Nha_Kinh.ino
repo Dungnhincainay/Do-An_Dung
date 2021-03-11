@@ -25,7 +25,7 @@ char pass[] = "";                                     // Cai dat mang
 #define AC 4                        //GPIO4 - thanh nhiet - D2
 #define BOM 12                      // D6
 #define DHTPIN 13                   // D7              
-#define INTERRUPT_PIN 14            // Sử dụng GPIO14 để ngatw
+#define INTERRUPT_PIN 14            // Sử dụng GPIO14 để ngat
 
 
 #define DHTTYPE DHT21 // DHT 21 (AM2301)
