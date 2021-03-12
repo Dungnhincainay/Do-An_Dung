@@ -1,11 +1,11 @@
 
 /* Code viet cho Esp8266 NodeMCU V3
-https://bitly.com.vn/b6vwo7
+    https://bitly.com.vn/b6vwo7
 GPIO 4, 5, 12, 13, 14, 16 có thể sử dụng bình thường.
     D2 D1  D6  D7 D5  D0
 
 Document: https://docs.blynk.cc/#blynk-firmware-virtual-pins-control
-http://rancilio-pid.de/5-der-erste-test/
+          http://rancilio-pid.de/5-der-erste-test/
 
 Máy chủ của bạn là: iot.htpro.vn , blynk.remoteapp.de hoặc blynk.quynhanmobile.com
 Cổng: 9443 trên app và 8080 tren app Blynk*/
@@ -18,31 +18,30 @@ SimpleTimer timer;
 
 char auth[] = "C39HJavn-IoVsrHbYA7ea3IqlKhGauFL";     // Cai dat mang
 //char auth[] = "8TytNxie25BVKYolzRm_yLjF1vAGbrCA";   // Cai dat mang
-char ssid[] = "Wifi Cua Tuan";                        // Cai dat mang
-char pass[] = "";                                     // Cai dat mang
+char ssid[] = "Wifi Cua Tuan";                        // Tên wifi (chính xac từng dấu cách, chữ hoa, thường)
+char pass[] = "";                                     // Password (nếu k đặt pass thì bỏ chống)
 
 // Khai báo chân kết nối
-#define QUAT 5                      //GPIO5 - D1
+#define INTERRUPT_PIN 5             // D1_ Sử dụng GPIO14 để ngat
 #define Thanh_Nhiet 4               //GPIO4 - D2
+#define QUAT 14                     // D5
 #define BOM 12                      // D6
-#define DHTPIN 13                   // D7              
-#define INTERRUPT_PIN 14            // D5_ Sử dụng GPIO14 để ngat
+#define DHTPIN 13                   // D7 - Kết nối cảm biến nhiệt độ+ độ ẩm DHT21             
 
-#define DHTTYPE DHT21 // DHT 21 (AM2301)
+#define DHTTYPE DHT21   // DHT 21 (AM2301)
 DHT dht(DHTPIN, DHTTYPE);
-float temp_sensor,humidity_sensor,hum_ADC,ADC_VALUE;  //  V5 - Do am khong khi, V6 - Nhiet do khong khi, V4 - Do am Dat 
-float h,t,Nhietdodat,Do_am_dat,Sai_so;  
+float Temp_Sensor,Humidity_Sensor,Hum_ADC,ADC_VALUE;  //  V5 - Do am khong khi, V6 - Nhiet do khong khi, V4 - Do am Dat 
+float h,t,Nhietdodat,Do_am_dat,Sai_so;                // Các biến xử lý giá trị cảm biến
 
-float A,A1,A2,Alpha,Beta,Gama,pid_Output,pid_LastOutput,Timer_1;
-float led_T=0.05; // Lưu ý T- Thời gian trích mẫu
+float A,A1,A2,Alpha,Beta,Gama,pid_Output,pid_LastOutput,Timer_1;  //Biến tính toán PID (cần xem lại)
 
- int Che_do;
- float Kp =1;      //Kp
- float Ki =1;      //Ki
- float Kd =1;      //Kd
+float led_T;      // Lưu ý T- Thời gian trích mẫu.... Phải xem xét lại
 
+float Kp =1;      //Kp
+float Ki =0;      //Ki
+float Kd =0;      //Kd
 
-int FLAG_MODE,FLAG_PID_QUAT,FLAG_PID_NHIET_DO,FLAG_MANUAL;
+int Che_do,FLAG_MODE,FLAG_PID_QUAT,FLAG_PID_NHIET_DO,FLAG_MANUAL;
 int Toc_do_quat,value,Bat_bom,Bat_Thanh_Nhiet;
 
 int flag=0;
@@ -53,22 +52,15 @@ const long Set_time = 300;
 
 WidgetLED led_Bom(V22);
 WidgetLED led_Thanh_Nhiet(V21);
+
 BLYNK_CONNECTED() {
-    Blynk.syncAll();
-}
+  Blynk.syncAll();      // Đồng bộ trạng thái các nút ấn
+ }
  BLYNK_WRITE(V1){             // Chọn chế độ 1- PID, 2- Manual
    Che_do = param.asFloat(); // Nhận giá trị từ điện thoại
-   if(Che_do==2){           // Tự động vào chế độ PID
-     FLAG_MANUAL=1;
-     FLAG_PID_NHIET_DO=0;
-     FLAG_PID_QUAT=0;
-     FLAG_MODE=0;
-   }else{                   // Tự động vào chế độ PID
-     FLAG_MANUAL=0;
-     FLAG_PID_QUAT=1;
-     FLAG_PID_NHIET_DO=1;
-     FLAG_MODE=1;
    }
+BLYNK_WRITE(V3){   
+   led_T = param.asFloat(); // Thoi gian trich mau
  }
  BLYNK_WRITE(V7){   
    Kp = param.asFloat(); // Nhận giá trị KP
@@ -81,7 +73,7 @@ BLYNK_CONNECTED() {
  }
  BLYNK_WRITE(V10){   
    Toc_do_quat = param.asInt(); // Get value as integer
-   value= map(Toc_do_quat,0,100,0,1023);
+   value= map(Toc_do_quat,0,100,0,255);     // Quy đổi giá trị từ 0-100% thành 0-255
  }
  BLYNK_WRITE(V12){   
    Bat_bom = param.asInt();     // Get value as integer
@@ -97,31 +89,32 @@ BLYNK_CONNECTED() {
  }
 
 
-void sendUptime()
+void sendUptime()       //
 {
-  h = h+0.845 ;             // Test giá trị nhiệt độ, độ ẩm
-  t = t+1.23 ;              // Test giá trị nhiệt độ, độ ẩm
-  if (h>=100){              // Test giá trị nhiệt độ, độ ẩm
-    h=0;                    // Test giá trị nhiệt độ, độ ẩm
-  }                         // Test giá trị nhiệt độ, độ ẩm
+  h = h+0.845 ;             // Test giá trị nhiệt độ, độ ẩm, mua cảm biến về lắp thì xoá bỏ
+  t = t+1.23 ;              // Test giá trị nhiệt độ, độ ẩm, mua cảm biến về lắp thì xoá bỏ
+  if (h>=100){              // Test giá trị nhiệt độ, độ ẩm, mua cảm biến về lắp thì xoá bỏ
+    h=0;                    // Test giá trị nhiệt độ, độ ẩm, mua cảm biến về lắp thì xoá bỏ
+  }                         // Test giá trị nhiệt độ, độ ẩm, mua cảm biến về lắp thì xoá bỏ
   if(t>=100){t=1;}
 
-  humidity_sensor = dht.readHumidity();         //doc gia tri do am tu  DHT21
-  temp_sensor = dht.readTemperature();          // Doc gia tri nhiet do tu DHT21
-  if (isnan(humidity_sensor) || isnan(temp_sensor)) {
+  Humidity_Sensor = dht.readHumidity();         // Doc gia tri do am tu  DHT21
+  Temp_Sensor = dht.readTemperature();          // Doc gia tri nhiet do tu DHT21
+   if (isnan(Humidity_Sensor) || isnan(Temp_Sensor)) {
       Serial.println("Loi khong co ket noi den DHT21!");
-//      Blynk.notify("Lỗi Cảm biến nhiệt độ"); // Tạo cảnh báo
-      humidity_sensor = 0;       
-      temp_sensor = 0;          
-    }
+    //Blynk.notify("Lỗi Cảm biến nhiệt độ"); // Tạo cảnh báo       
+  }
 
-  Serial.println("\nKet qua do duoc:");         // Hiển thị trên monitor
-  Serial.print("Do Am = ");                     // Hiển thị trên monitor
-  Serial.print(humidity_sensor);                // Hiển thị trên monitor
-  Serial.print("%  ");                          // Hiển thị trên monitor
-  Serial.print("Nhiet do = ");                  // Hiển thị trên monitor
-  Serial.print(temp_sensor);                    // Hiển thị trên monitor
-  Serial.print("°C \n");                        // Hiển thị trên monitor
+  // Serial.println("\nKet qua do duoc:");         // Hiển thị trên monitor
+  // Serial.print("Do Am = ");                     // Hiển thị trên monitor
+  // Serial.print(Humidity_Sensor);                // Hiển thị trên monitor
+  // Serial.print("%  ");                          // Hiển thị trên monitor
+  // Serial.print("Nhiet do = ");                  // Hiển thị trên monitor
+  // Serial.print(Temp_Sensor);                    // Hiển thị trên monitor
+  // Serial.print("°C \n");                        // Hiển thị trên monitor
+
+  //Blynk.virtualWrite(V6, Temp_Sensor);          // Có cảm biến thì dùng 2 dòng này, xoá 2 dòng dưới
+  //Blynk.virtualWrite(V5, Humidity_Sensor);      // Có cảm biến thì dùng 2 dòng này, xoá 2 dòng dưới
   Blynk.virtualWrite(V6, t);      // Gửi dữ liệu lên sever - lên Điện thoại.
   Blynk.virtualWrite(V5, h);      // Gửi dữ liệu lên sever - lên Điện thoại.
   
@@ -133,13 +126,12 @@ void sendUptime()
     }  
 
   ADC_VALUE = analogRead(A0);                 // Doc gia tri do am dat
-  hum_ADC =((ADC_VALUE/1024)/0.767442)*100;   //map(value, fromLow, fromHigh, toLow, toHigh)
-  Blynk.virtualWrite(V4, hum_ADC);            // Hien thi gia tri do am dat len Blynk
+  Hum_ADC =((ADC_VALUE/1024)/0.767442)*100;   //map(value, fromLow, fromHigh, toLow, toHigh)
+  Blynk.virtualWrite(V4, Hum_ADC);            // Hien thi gia tri do am dat len Blynk
 
   // Mã nguồn xử lý chế độ Manual điều khiển thiết bị bằng tay
   if(FLAG_MANUAL==1){   //VAO CHE DO MANUAL
     analogWrite(QUAT,value);  // Đieu khien toc do quat
-    
     Blynk.virtualWrite(V10, Toc_do_quat);
 
     if (Bat_bom == 1){
@@ -155,24 +147,21 @@ void sendUptime()
     if (Bat_Thanh_Nhiet == 1){
       Serial.println("BAT THANH NHIET");    // Bat thanh nhiet
       digitalWrite(Thanh_Nhiet,HIGH);                // Bat thanh nhiet
-
       led_Thanh_Nhiet.on();
     }else {
       Serial.println("TAT THANH NHIET");    // Tat thanh nhiet
       digitalWrite(Thanh_Nhiet,LOW);                 // Tat thanh nhiet
-
       led_Thanh_Nhiet.off();
     }
-//    FLAG_MANUAL=0;  
+    //FLAG_MANUAL=0;  
   }
- 
 }
 
 // Mã nguồn xử lý điều khiển Triac
-void ICACHE_RAM_ATTR TriacControl(){ //them ICACHE_RAM_ATTR
+void ICACHE_RAM_ATTR TriacControl(){     //ICACHE_RAM_ATTR tra google
   Serial.println("DA VAO CHUONG TRINH NGAT");
   if(FLAG_MODE==1){
-    delayMicroseconds(Timer_1 * 10000);
+    delayMicroseconds(Timer_1 * 10000);   // Can xem xet lai
     digitalWrite(Thanh_Nhiet, HIGH);
     delayMicroseconds(100);
     digitalWrite(Thanh_Nhiet, LOW);
@@ -182,14 +171,17 @@ void ICACHE_RAM_ATTR TriacControl(){ //them ICACHE_RAM_ATTR
 void setup()
 {
     Serial.begin(115200);
-    Blynk.begin(auth, ssid, pass,"iot.htpro.vn", 8080);
-    pinMode(INTERRUPT_PIN, INPUT_PULLUP);
-    attachInterrupt(INTERRUPT_PIN, TriacControl, FALLING);
-    pinMode(LED_BUILTIN, OUTPUT);
+    Blynk.begin(auth, ssid, pass,"iot.htpro.vn", 8080);     // Kết nối wifi và internet
+
+    pinMode(INTERRUPT_PIN, INPUT_PULLUP);                   // Khai báo Ngắt
+    attachInterrupt(INTERRUPT_PIN, TriacControl, FALLING);  //RISING- có 5 chế độ ngắt
+
+    pinMode(LED_BUILTIN, OUTPUT);    
     pinMode(QUAT, OUTPUT);
     pinMode(BOM, OUTPUT);
-    pinMode(Thanh_Nhiet, OUTPUT);
-    timer.setInterval(1000, sendUptime);
+    pinMode(Thanh_Nhiet, OUTPUT);     
+
+    timer.setInterval(1000, sendUptime);  // Nhảy tới hàm sendUptime mỗi 1000ms (Co thể tăng thêm). Để tránh gửi dữ liệu liên tục lên Blynk Cloud.
 }
 
 void loop()
@@ -197,14 +189,24 @@ void loop()
   Blynk.run();
   timer.run();
 
+  if(Che_do==2){           // Tự động vào chế độ PID
+    Serial.println("Day la che do PID ");
+     FLAG_MANUAL=1;
+     FLAG_PID_NHIET_DO=0;
+     FLAG_PID_QUAT=0;
+     FLAG_MODE=0;
+   }else{                   // Tự động vào chế độ PID
+    Serial.println("Day la che do MANUAL ");
+     FLAG_MANUAL=0;
+     FLAG_PID_QUAT=1;
+     FLAG_PID_NHIET_DO=1;
+     FLAG_MODE=1;
+   }
 
 // Mã nguồn xử lý tính toán delay trước khi mở Triac
-if(FLAG_PID_NHIET_DO==1){  ///VAO CHE DO PID NHIET DO
-  A = Nhietdodat - temp_sensor;
-  Serial.println("Day la che do PID, các thông số: ");
-  Serial.println(Kp);
-  Serial.println(Ki);
-  Serial.println(Kd);
+if(FLAG_PID_NHIET_DO==1){     //VAO CHE DO PID NHIET DO
+  A = Nhietdodat - Temp_Sensor;
+
   if (A < 0) {
     Timer_1 = 0.9;
     }
@@ -213,9 +215,9 @@ if(FLAG_PID_NHIET_DO==1){  ///VAO CHE DO PID NHIET DO
       Beta = led_T*led_T*Ki - 4*Kd - 2*led_T*Kp;
       Gama = 2*Kd;
 
-      pid_Output = (Alpha*A + Beta*A1 + Gama*A2 + 2*led_T*pid_LastOutput) / (2*led_T);
-      pid_LastOutput = pid_Output;
-      A2=A1;
+      pid_Output = (Alpha*A + Beta*A1 + Gama*A2 + 2*led_T*pid_LastOutput) / (2*led_T);    // CÓ vẻ sai sai cần xem lại. test thử code chạy k ổn
+      pid_LastOutput = pid_Output;             // Trong sách: U(k) = U(k-1) + (Kp+Kd/Ta)*e(k) + (Ki*Ta-Kp)*e(k-1) + Kd*e(k-2)/Ta;
+      A2=A1;    
       A1=A;
   
       if (pid_Output>255){
@@ -235,14 +237,15 @@ if(FLAG_PID_NHIET_DO==1){  ///VAO CHE DO PID NHIET DO
         }
       }
     }	  
-	//FLAG_PID_NHIET_DO=0;  
+
+  //FLAG_PID_NHIET_DO=0;  
 }
 
   // Mã nguồn xử lý chế độ điều khiển cho Quạt
   if(FLAG_PID_QUAT==1){  ////VAO CHE DO TU DONG CHO QUAT
     Serial.println("Bat dau CHAY TU DONG CHO QUAT");
     Serial.println(Nhietdodat);
-    Sai_so = temp_sensor - Nhietdodat;
+    Sai_so = Temp_Sensor - Nhietdodat;
     if (Sai_so < 0) {
        analogWrite(QUAT, 0);    // Tat quat
        Serial.println("analogWrite(QUAT, 0)");
@@ -269,7 +272,7 @@ if(FLAG_PID_NHIET_DO==1){  ///VAO CHE DO PID NHIET DO
   //  FLAG_PID_QUAT=0;
   }//Ket thuc ham chay tu dong cho quat
 
-    Now = millis();                 // Nhấp nháy led
+  Now = millis();                 // Nhấp nháy led
   if (Now - Ago >= Set_time) {    // Nhấp nháy led
     Ago = Now;                    // Nhấp nháy led
     if (ledState == LOW) {        // Nhấp nháy led
@@ -278,6 +281,7 @@ if(FLAG_PID_NHIET_DO==1){  ///VAO CHE DO PID NHIET DO
       ledState = LOW;             // Nhấp nháy led
     }                             // Nhấp nháy led
     digitalWrite(LED_BUILTIN, ledState);       // Đảo trạng thái led
+    Blynk.virtualWrite(V2, Timer_1);
   }
  
 } // ket thuc void loop
