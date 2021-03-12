@@ -1,37 +1,4 @@
 
-float humidity_sensor=0;             // V4 - Do am khong khi
-float temp_sensor=0;                // V5 - Nhiet do khong khi
-float hum_ADC,ADC_VAL,temp_Set;    // V6 - Do am Dat 
-
-
-#define QUAT D1         //GPIO5
-#define AC D2           //GPIO4 - thanh nhiet
-float humidity_sensor=0;             // V4 - Do am khong khi
-float temp_sensor=0;                // V5 - Nhiet do khong khi
-float hum_ADC,ADC_VAL,temp_Set,sai_so;    // V6 - Do am Dat 
-
-int flag=0;
-
- // V1 V2 : Chọn chế độ
- float value1;
- float Kp =0;      //Kp
- float Ki =0;      //Ki
- float Kd =0;      //Kd
-
-int FLAG_PID,FLAG_MANUAL,FLAG_PID_NHIET_DO,BT_AC
-int ledState = LOW;
-unsigned long Ago = 0;
-unsigned long Now = 0;
-const long Set_time = 300;
-
-int flag=0;
-
- // V1 V2 : Chọn chế độ
- float value1;
- float Kp =0;      //Kp
- float Ki =0;      //Ki
- float Kd =0;      //Kd
-F
 // Phụ lục 1: Mã nguồn xử lý của chương trình điều khiển 
 
 //P1.1: Mã nguồn xử lý tính toán delay trước khi mở Triac
