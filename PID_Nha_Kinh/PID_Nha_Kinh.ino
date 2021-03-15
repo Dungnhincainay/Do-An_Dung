@@ -4,7 +4,7 @@
 GPIO 4, 5, 12, 13, 14, 16 có thể sử dụng bình thường.
     D2 D1  D6  D7 D5  D0
 
-Document: https://docs.blynk.cc/#blynk-firmware-virtual-pins-control
+Document: https://docs.blynk.cc/#blynk-firmware-virtual-pi1ns-control
           http://rancilio-pid.de/5-der-erste-test/
 
 Máy chủ của bạn là: iot.htpro.vn , blynk.remoteapp.de hoặc blynk.quynhanmobile.com
@@ -89,7 +89,7 @@ BLYNK_WRITE(V3){
  }
  BLYNK_WRITE(V31){   
    Do_Sang_Den = param.asInt(); // Get value as integer
-   Timer_2 = 100*Do_Sang_Den;
+   Timer_2 = map(Do_Sang_Den,0,100,9000,0);
  }
 
 void sendUptime()       //
@@ -162,7 +162,7 @@ void sendUptime()       //
 void ICACHE_RAM_ATTR TriacControl(){     //ICACHE_RAM_ATTR tra google
  // Serial.println("DA VAO CHUONG TRINH NGAT");
   if(FLAG_MODE==1){
-    delayMicroseconds(Timer_2 * 10000);   // sử dụng Timer_2 để test- kiểm tra PID dùng biến Timer_1 
+    delayMicroseconds(Timer_2);   // sử dụng Timer_2 để test- kiểm tra PID dùng biến Timer_1 
     digitalWrite(Thanh_Nhiet, HIGH);
     delayMicroseconds(100);
     digitalWrite(Thanh_Nhiet, LOW);
