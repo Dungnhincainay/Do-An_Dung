@@ -20,6 +20,8 @@ char auth[] = "C39HJavn-IoVsrHbYA7ea3IqlKhGauFL";   // Cai dat mang
 char ssid[] = "P 402 2.4G";                        // Tên wifi (chính xac từng dấu cách, chữ hoa, thường)
 char pass[] = "12345678";                          // Password (nếu k đặt pass thì bỏ chống)
 
+
+  
 // Khai báo chân kết nối
 #define INTERRUPT_PIN 5             // D1_ Sử dụng GPIO14 để ngat
 #define Thanh_Nhiet 4               //GPIO4 - D2
