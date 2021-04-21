@@ -9,7 +9,7 @@ Document: https://docs.blynk.cc/#blynk-firmware-virtual-pi1ns-control
 
 Máy chủ của bạn là: iot.htpro.vn , blynk.remoteapp.de hoặc blynk.quynhanmobile.com
 Cổng: 9443 trên app Blynk và 8080 tren ESP */
-
+//  GPIO 4, 5, 12, 13, 14, 16 có thể sử dụng bình thường.
 #define BLYNK_PRINT Serial
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>    
@@ -23,7 +23,7 @@ char pass[] = "12345678";                          // Password (nếu k đặt p
 
   
 // Khai báo chân kết nối
-#define INTERRUPT_PIN 5             // D1_ Sử dụng GPIO14 để ngat
+#define INTERRUPT_PIN 5             // D1_ Sử dụng GPIO14 để ngat. Tất cả các GPIO ngoại trừ GPIO16 đều có hỗ trợ interrupt
 #define Thanh_Nhiet 4               //GPIO4 - D2
 #define QUAT 14                     // D5
 #define BOM 12                      // D6
